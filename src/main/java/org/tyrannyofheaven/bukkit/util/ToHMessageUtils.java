@@ -15,6 +15,11 @@
  */
 package org.tyrannyofheaven.bukkit.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +34,9 @@ import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.ChatPaginator;
+
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 
 /**
  * Convenience methods mainly for displaying info via {@link CommandSender#sendMessage(String)}.
@@ -60,6 +68,30 @@ public class ToHMessageUtils {
         for (String line : message.split("\n")) {
             sender.sendMessage(line);
         }
+    }
+
+    /**
+     * Sends a plugin message to BungeeCord, signing it with zPermissions as the channel,
+     * the users UUID, and any information to write to it.
+     * 
+     * @param plugin plugin to send with
+     * @param player player to sign with
+     * @param channel sub channel to send to
+     * @param objects objects to write
+     */
+    public static void sendPluginMessage(Plugin plugin, Player player, String channel, Object... objects) {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        try (ObjectOutputStream stream = new ObjectOutputStream(buffer)) {
+            stream.writeUTF("zPermissions");
+            stream.writeUTF(channel);
+            stream.writeUTF(player.getUniqueId().toString());
+            for (Object o : objects) {
+                stream.writeObject(o);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        player.sendPluginMessage(plugin, "BungeeCord", buffer.toByteArray());
     }
 
     // For colorize()
