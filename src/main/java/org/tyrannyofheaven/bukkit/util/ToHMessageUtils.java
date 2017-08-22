@@ -22,9 +22,11 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -70,9 +72,26 @@ public class ToHMessageUtils {
         }
     }
 
+
     /**
-     * Sends a plugin message to BungeeCord, signing it with zPermissions as the channel,
-     * the users UUID, and any information to write to it.
+     * Sends a plugin message to BungeeCord only if the player with the given
+     * UUID is online.
+     *
+     * @param plugin plugin to send with
+     * @param player player to sign with
+     * @param channel sub channel to send to
+     * @param objects objects to write
+     */
+    public static void sendPluginMessage(Plugin plugin, UUID player, String channel, Object... objects) {
+        Player p = Bukkit.getPlayer(player);
+        if (p != null) {
+            sendPluginMessage(plugin, p, channel, objects);
+        }
+    }
+    
+    /**
+     * Sends a plugin message to BungeeCord, signing it with zPermissions as 
+     * the channel, the users UUID, and any information to write to it.
      * 
      * @param plugin plugin to send with
      * @param player player to sign with
