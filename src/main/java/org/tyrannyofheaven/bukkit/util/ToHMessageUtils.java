@@ -71,46 +71,36 @@ public class ToHMessageUtils {
             sender.sendMessage(line);
         }
     }
-
-
-    /**
-     * Sends a plugin message to BungeeCord only if the player with the given
-     * UUID is online.
-     *
-     * @param plugin plugin to send with
-     * @param player player to sign with
-     * @param channel sub channel to send to
-     * @param objects objects to write
-     */
-    public static void sendPluginMessage(Plugin plugin, UUID player, String channel, Object... objects) {
-        Player p = Bukkit.getPlayer(player);
-        if (p != null) {
-            sendPluginMessage(plugin, p, channel, objects);
-        }
-    }
     
     /**
      * Sends a plugin message to BungeeCord, signing it with zPermissions as 
-     * the channel, the users UUID, and any information to write to it.
+     * the channel and any information to write to it.
      * 
      * @param plugin plugin to send with
-     * @param player player to sign with
      * @param channel sub channel to send to
      * @param objects objects to write
      */
-    public static void sendPluginMessage(Plugin plugin, Player player, String channel, Object... objects) {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        try (ObjectOutputStream stream = new ObjectOutputStream(buffer)) {
-            stream.writeUTF("zPermissions");
-            stream.writeUTF(channel);
-            stream.writeUTF(player.getUniqueId().toString());
-            for (Object o : objects) {
-                stream.writeObject(o);
+    public static void sendPluginMessage(Plugin plugin, String channel, String... objects) {
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+        out.writeUTF("zPermissions");
+        out.writeUTF(channel);
+
+        try (ByteArrayOutputStream msgbytes = new ByteArrayOutputStream();
+             DataOutputStream msgout = new DataOutputStream(msgbytes)) {
+            for (String s : objects) {
+                msgout.writeUTF(s);
+            }
+
+            byte[] byteArray = msgbytes.toByteArray();
+            out.writeShort(byteArray.length);
+            out.write(byteArray);
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
+                return;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        player.sendPluginMessage(plugin, "BungeeCord", buffer.toByteArray());
     }
 
     // For colorize()
